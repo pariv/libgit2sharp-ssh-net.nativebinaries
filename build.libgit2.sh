@@ -8,6 +8,7 @@ OS=`uname`
 ARCH=`uname -m`
 PACKAGEPATH="nuget.package/runtimes"
 OSXARCHITECTURE=$ARCH
+LIBFILENAME=git2-ssh-net-$SHORTSHA
 
 if [[ $OS == "Darwin" ]]; then
     USEHTTPS="ON"
@@ -20,6 +21,19 @@ else
     USEHTTPS="OpenSSL-Dynamic"
 fi
 
+rm -rf libssh2/build
+mkdir libssh2/build
+pushd libssh2/build
+export _BINPATH=`pwd`
+cmake -DCMAKE_BUILD_TYPE:STRING=Release \
+      -DCMAKE_C_FLAGS=-fPIC \
+      -DBUILD_SHARED_LIBS=OFF \
+      -DENABLE_ZLIB_COMPRESSION=ON \
+      -DCMAKE_OSX_ARCHITECTURES="i386;x86_64" \
+      ..
+cmake --build .
+popd
+
 rm -rf libgit2/build
 mkdir libgit2/build
 pushd libgit2/build
@@ -28,11 +42,15 @@ export _BINPATH=`pwd`
 
 cmake -DCMAKE_BUILD_TYPE:STRING=Release \
       -DBUILD_TESTS:BOOL=OFF \
-      -DUSE_SSH=OFF \
-      -DLIBGIT2_FILENAME=git2-$SHORTSHA \
+      -DUSE_SSH=ON \
+      -DLIBSSH2_INCLUDE_DIR="/nativebinaries/libssh2/include" \
+      -DLIBSSH2_LIBRARY="/nativebinaries/libssh2/build/src/libssh2.a" \
+      -DGIT_SSH_MEMORY_CREDENTIALS=ON \
+      -DLIBGIT2_FILENAME=$LIBFILENAME \
       -DCMAKE_OSX_ARCHITECTURES=$OSXARCHITECTURE \
       -DUSE_HTTPS=$USEHTTPS \
       -DUSE_BUNDLED_ZLIB=ON \
+      -DBUILD_CLI=OFF \
       ..
 cmake --build .
 
@@ -52,4 +70,4 @@ fi
 rm -rf $PACKAGEPATH/$RID
 mkdir -p $PACKAGEPATH/$RID/native
 
-cp libgit2/build/libgit2-$SHORTSHA.$LIBEXT $PACKAGEPATH/$RID/native
+cp libgit2/build/lib$LIBFILENAME.$LIBEXT $PACKAGEPATH/$RID/native

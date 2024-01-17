@@ -17,7 +17,7 @@ else
     dockerfile="Dockerfile.linux"
 fi
 
-docker buildx build -t $RID -f $dockerfile --build-arg ARCH=$arch .
+docker build -t $RID -f $dockerfile --build-arg ARCH=$arch .
 
 docker run -t -e RID=$RID --name=$RID $RID
 

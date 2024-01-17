@@ -1,7 +1,7 @@
-FROM bording/crossbuild
 ARG ARCH='amd64'
+FROM ${ARCH}/debian
 ENV CROSS_TRIPLE=${ARCH}
-RUN apt update && apt -y install pkg-config
+RUN apt update && apt -y install cmake gcc libcurl4-openssl-dev libssl-dev pkg-config zlib1g-dev
 
 WORKDIR /nativebinaries
 COPY . /nativebinaries/
